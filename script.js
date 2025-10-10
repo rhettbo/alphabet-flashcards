@@ -16,9 +16,10 @@
   const scoreLine = $("#scoreLine");
   const playAgainBtn = $("#playAgainBtn");
   const closeModalBtn = $("#closeModalBtn");
+  const resetBtn = $("#resetBtn");
 
   // --- Paths (case rules) ---
-  const imagePath = (L) => `images/${L}.png`; // uppercase for images
+  const imagePath = (L) => `images/${L}.png`;                // uppercase for images
   const nameAudio = (L) => `audio/letter ${L.toLowerCase()}.wav`;
   const phonemeAudio = (L) => `audio/${L.toLowerCase()}.wav`;
   const quizAudio = (L) => `audio/find ${L.toLowerCase()}.wav`;
@@ -26,26 +27,36 @@
 
   // --- Audio Engine with fallback to TTS ---
   let currentAudio = null;
-  function speakTTS(text){
+  function speakTTS(text) {
     if (!("speechSynthesis" in window)) return;
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 1; u.pitch = 1;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
   }
-  function playSound(src, ttsFallbackText){
+  function playSound(src, ttsFallbackText) {
     return new Promise((resolve) => {
       try {
-        if (currentAudio) { currentAudio.pause(); }
+        if (currentAudio) currentAudio.pause();
         const a = new Audio(src);
         currentAudio = a;
         a.onended = () => resolve();
         a.onerror = () => { if (ttsFallbackText) speakTTS(ttsFallbackText); resolve(); };
         a.play().catch(() => { if (ttsFallbackText) speakTTS(ttsFallbackText); resolve(); });
-      } catch (e) {
+      } catch {
         if (ttsFallbackText) speakTTS(ttsFallbackText);
         resolve();
       }
+    });
+  }
+
+  // --- Grid state helper (used only on new round / reset) ---
+  function resetGridStates() {
+    keyGrid.querySelectorAll(".key").forEach(k => {
+      k.classList.remove("correct","wrong","disabled");
+      k.style.background = "";
+      k.style.color = "";
+      k.style.borderColor = "";
     });
   }
 
@@ -66,14 +77,14 @@
     deck: shuffledDeck(),
     deckPos: 0,
     // Quiz
-    quizDeck: shuffledDeck(),
+    quizDeck: shuffledDeck(),   // 26 letters, random order, no repeats
     quizPos: 0,
     quizMisses: 0,
     quizCorrectThisRound: 0,
     autoplayQuizPrompt: true,
   };
 
-  // --- Rendering: Flashcard ---
+  // --- Flashcards ---
   function showFlashcard() {
     const L = state.deck[state.deckPos];
     flashcardImg.src = imagePath(L);
@@ -88,10 +99,10 @@
     showFlashcard();
   }
 
-  // --- Quiz Grid ---
+  // --- Quiz grid ---
   function buildGrid() {
     keyGrid.innerHTML = "";
-    LETTERS.forEach((L, idx) => {
+    LETTERS.forEach(L => {
       const btn = document.createElement("button");
       btn.className = "key";
       btn.textContent = L;
@@ -101,15 +112,28 @@
     });
   }
 
+  // --- New round / hard reset ---
+  function hardResetRound() {
+    modal.setAttribute("aria-hidden","true");
+    state.quizDeck = shuffledDeck();
+    state.quizPos = 0;
+    state.quizMisses = 0;
+    state.quizCorrectThisRound = 0;
+    resetGridStates();               // clear persistent colors
+    if (state.mode !== "quiz") setMode("quiz");
+    setQuizTarget();
+  }
+
+  // --- Set current quiz target (no clearing of past key colors) ---
   function setQuizTarget() {
     if (state.quizPos >= state.quizDeck.length) {
-      // End round: show score modal
+      // End of the 26-letter round
       const correct = state.quizCorrectThisRound;
-      const pct = Math.round((correct/26)*100);
+      const pct = Math.round((correct / 26) * 100);
       scoreLine.textContent = `${correct} / 26 (${pct}%)`;
-      modal.setAttribute("aria-hidden","false");
+      modal.setAttribute("aria-hidden", "false");
       playSound(endRoundAudio());
-      // Reset for next round
+      // Prep next round but keep grid colors until reset/play again
       state.quizDeck = shuffledDeck();
       state.quizPos = 0;
       state.quizCorrectThisRound = 0;
@@ -119,20 +143,15 @@
     const target = state.quizDeck[state.quizPos];
     promptText.textContent = `Find ${target}`;
     if (state.autoplayQuizPrompt) playSound(quizAudio(target), `Find ${target}`);
-
-    // reset key states
-    keyGrid.querySelectorAll(".key").forEach(k => {
-      k.classList.remove("correct","wrong","disabled");
-    });
   }
 
+  // --- Handle key taps ---
   function onKeyTap(L, btn) {
     const target = state.quizDeck[state.quizPos];
     if (btn.classList.contains("disabled")) return;
 
     if (L === target) {
-      btn.classList.add("correct");
-      btn.classList.add("disabled");
+      btn.classList.add("correct", "disabled");   // persist green
       if (state.quizMisses < 3) {
         state.quizCorrectThisRound++;
       }
@@ -143,8 +162,9 @@
       btn.classList.add("wrong");
       setTimeout(() => btn.classList.remove("wrong"), 150);
       if (state.quizMisses >= 3) {
-        // Mark the correct target red and advance
-        const targetBtn = [...keyGrid.querySelectorAll(".key")].find(b => b.textContent === target);
+        // Persist red on the correct target and advance
+        const targetBtn = [...keyGrid.querySelectorAll(".key")]
+          .find(b => b.textContent === target);
         if (targetBtn) {
           targetBtn.classList.add("disabled");
           targetBtn.style.background = "var(--danger)";
@@ -157,7 +177,7 @@
     }
   }
 
-  // --- Mode switching ---
+  // --- View/Mode switching ---
   function showView(id) {
     [viewFlashcard, viewQuiz].forEach(v => { v.classList.remove("view--active"); v.hidden = true; });
     const el = (id === "flashcard") ? viewFlashcard : viewQuiz;
@@ -168,16 +188,19 @@
     state.mode = mode;
     if (mode === "flashcard") {
       modeToggle.textContent = "Quiz Mode";
+      resetBtn.hidden = true;
       showView("flashcard");
       showFlashcard();
     } else {
       modeToggle.textContent = "Flashcards";
+      resetBtn.hidden = false;
       showView("quiz");
+      // Do NOT clear key colors here; they persist through the round
       setQuizTarget();
     }
   }
 
-  // --- Event wiring ---
+  // --- Events ---
   flashcardImg.addEventListener("click", () => {
     const L = state.deck[state.deckPos];
     playSound(nameAudio(L), L);
@@ -205,24 +228,20 @@
   });
 
   playAgainBtn.addEventListener("click", () => {
-    modal.setAttribute("aria-hidden","true");
-    // Start a fresh round immediately
-    state.quizDeck = shuffledDeck();
-    state.quizPos = 0;
-    state.quizCorrectThisRound = 0;
-    setQuizTarget();
-    setMode("quiz");
+    // Start a fresh round immediately and clear colors
+    hardResetRound();
   });
+
   closeModalBtn.addEventListener("click", () => modal.setAttribute("aria-hidden","true"));
 
-  // Build grid once
-  buildGrid();
+  resetBtn.addEventListener("click", hardResetRound);
 
-  // Initial render
+  // --- Init ---
+  buildGrid();
   showFlashcard();
   setMode("flashcard");
 
-  // PWA: service worker
+  // --- PWA SW ---
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('service-worker.js').catch(console.error);
