@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#e9f4f2" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <title>Alphabet Flashcards</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <button id="modeToggle" class="btn btn-ghost" aria-label="Toggle Quiz Mode">Quiz Mode</button>
+        <div class="spacer"></div>
+        <button id="settingsBtn" class="btn btn-ghost" aria-label="Settings" hidden>⚙️</button>
+      </header>
+
+      <main id="viewFlashcard" class="view view--active" aria-live="polite">
+        <div class="card-wrap">
+          <img id="flashcardImg" class="flashcard" src="" alt="Letter card" draggable="false" />
+          <button id="phonemeBtn" class="icon-btn" aria-label="Play letter sound" title="Play letter sound">🔊</button>
+        </div>
+        <button id="nextBtn" class="next-btn" aria-label="Next letter">➜</button>
+      </main>
+
+      <main id="viewQuiz" class="view" aria-live="polite" hidden>
+        <div class="quiz-prompt">
+          <div class="prompt-text"><span id="promptText">Find A</span></div>
+          <button id="promptSpeaker" class="icon-btn" aria-label="Replay prompt">🔊</button>
+        </div>
+        <div id="keyGrid" class="key-grid" role="grid" aria-label="Alphabet keys"></div>
+      </main>
+
+      <div id="scoreModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="modal__sheet">
+          <h2>Great job!</h2>
+          <p id="scoreLine">0 / 26 (0%)</p>
+          <div class="modal__actions">
+            <button id="playAgainBtn" class="btn">Play Again</button>
+            <button id="closeModalBtn" class="btn btn-ghost">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
