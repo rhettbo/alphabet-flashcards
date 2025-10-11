@@ -107,7 +107,10 @@ body{
   box-shadow: var(--card-shadow);
   cursor: pointer;
 }
-.next-btn{
+#nextBtn {
+  position: absolute;
+  left: 10px;           /* mirror the right:10px from #phonemeBtn */
+  bottom: 10px;         /* same bottom alignment */
   font-size: 28px;
   padding: 10px 20px;
   border-radius: 20px;
@@ -187,7 +190,7 @@ body{
 
 /* 3) Pull the flashcard up by the same amount so the top edge matches the button's top */
 #viewFlashcard .card-wrap{
-  margin-top: -8px;   /* matches the header's top padding above */
+  margin-top: -40px;   /* matches the header's top padding above */
 }
 
 /* Keep the flashcard view top-aligned (not centered) */
@@ -197,3 +200,4 @@ body{
   align-items: center;
   justify-content: flex-start;
 }
+
