@@ -174,3 +174,26 @@ body{
 @media (prefers-reduced-motion: reduce){
   .key.wrong{ animation: none; }
 }
+
+/* 1) Tighten the header so the button sits near the very top */
+.app-header{
+  padding: 8px 12px; /* was calc(8px + env(...) ) ... keep it simple */
+}
+
+/* 2) Remove top padding from the view so content can reach the same Y as the button */
+.view{
+  padding: 0 16px 16px; /* no top padding */
+}
+
+/* 3) Pull the flashcard up by the same amount so the top edge matches the button's top */
+#viewFlashcard .card-wrap{
+  margin-top: -8px;   /* matches the header's top padding above */
+}
+
+/* Keep the flashcard view top-aligned (not centered) */
+#viewFlashcard.view--active{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
