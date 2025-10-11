@@ -77,7 +77,7 @@ body{
 /* Flashcard view: top align (overrides default) */
 #viewFlashcard.view--active{
   justify-content: flex-start;               /* push toward top */
-  padding-top: clamp(8px, 6vh, 72px);        /* adjust to move higher/lower */
+  padding-top: clamp(8px, 2vh, 72px);        /* adjust to move higher/lower */
 }
 
 /* Card + sound icon */
