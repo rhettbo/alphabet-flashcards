@@ -46,6 +46,17 @@ body{
 .view{ display: none; padding: 16px; }
 .view--active{ display: grid; place-items: center; gap: 12px; }
 
+/* Push flashcard higher on the screen (only in Flashcard mode) */
+#viewFlashcard.view--active{
+  display: flex;                 /* override the grid centering */
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;   /* top */
+  gap: 12px;
+  padding-top: clamp(8px, 6vh, 64px); /* adjust this to taste */
+}
+
+
 .card-wrap{
   position: relative;
   width: min(90vw, 640px);
