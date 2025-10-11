@@ -141,7 +141,7 @@
     }
     state.quizMisses = 0;
     const target = state.quizDeck[state.quizPos];
-    promptText.textContent = `Find ${target}`;
+    promptText.textContent = "Find the letter";
     if (state.autoplayQuizPrompt) playSound(quizAudio(target), `Find ${target}`);
   }
 
