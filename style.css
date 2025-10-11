@@ -1,16 +1,16 @@
 :root{
-  --bg: #f5f6f3; /* cream */
+  --bg: #f5f6f3;        /* cream */
   --ink: #1a1f1c;
   --teal: #2b9aa7;
   --teal-600: #267f89;
-  --success: #2aa874; /* green */
-  --danger: #c94242;  /* red */
+  --success: #2aa874;   /* green */
+  --danger: #c94242;    /* red */
   --muted: #b9c2bb;
   --card-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
 
 *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body, #app { height: 100%; }
+html, body { height: 100%; }
 body{
   margin:0;
   font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
@@ -18,11 +18,27 @@ body{
   background: var(--bg);
 }
 
+/* App layout: header + view fills the rest */
+#app{
+  min-height: 100dvh;                 /* better on mobile than 100vh */
+  display: flex;
+  flex-direction: column;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Header */
 .app-header{
-  position: sticky; top: env(safe-area-inset-top); left: 0; right: 0;
+  position: sticky;
+  top: 0;
+  left: 0; right: 0;
   display: flex; align-items: center; gap: 8px;
   padding: calc(8px + env(safe-area-inset-top)) 12px 8px 12px;
+  background: var(--bg);
+  z-index: 10;
 }
+.spacer{ flex: 1; }
 
 .btn{
   background: var(--teal);
@@ -32,6 +48,7 @@ body{
   border-radius: 16px;
   font-size: 16px;
   box-shadow: var(--card-shadow);
+  cursor: pointer;
 }
 .btn:active{ transform: translateY(1px); }
 .btn-ghost{
@@ -40,36 +57,30 @@ body{
   border: 2px solid var(--teal);
   padding: 8px 12px;
   border-radius: 16px;
+  box-shadow: none;
 }
-.spacer{ flex: 1; }
 
-/* Let views fill the screen vertically */
-#app{
+/* Views */
+.view{
+  display: none;          /* hidden by default */
+  flex: 1;                /* take remaining height */
+  padding: 16px;
+}
+.view--active{
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;  /* handles mobile browser UI better than 100vh */
-}
-.view{
-  flex: 1;            /* main area takes remaining height under the header */
-}
-
-/* Top-align the flashcard view */
-#viewFlashcard.view--active{
-  display: flex;              /* override the grid centering */
-  flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;  /* default center */
   gap: 12px;
-  padding-top: clamp(8px, 6vh, 64px); /* adjust this to move it further up/down */
 }
 
+/* Flashcard view: top align (overrides default) */
+#viewFlashcard.view--active{
+  justify-content: flex-start;               /* push toward top */
+  padding-top: clamp(8px, 6vh, 72px);        /* adjust to move higher/lower */
+}
 
-.view{ display: none; padding: 16px; }
-.view--active{ display: grid; place-items: center; gap: 12px; }
-
-
-
-
+/* Card + sound icon */
 .card-wrap{
   position: relative;
   width: min(90vw, 640px);
@@ -77,8 +88,8 @@ body{
   display: grid; place-items: center;
 }
 .flashcard{
-  width: 80%;
-  height: 80%;
+  width: 92%;
+  height: 92%;
   object-fit: contain;
   border-radius: 24px;
   box-shadow: var(--card-shadow);
@@ -94,6 +105,7 @@ body{
   border-radius: 999px;
   padding: 6px 10px;
   box-shadow: var(--card-shadow);
+  cursor: pointer;
 }
 .next-btn{
   font-size: 28px;
@@ -103,20 +115,23 @@ body{
   color: var(--teal);
   border: 2px solid var(--teal);
   box-shadow: var(--card-shadow);
+  cursor: pointer;
 }
 
+/* Quiz prompt row */
 .quiz-prompt{
   display: flex; align-items: center; gap: 10px;
   justify-content: center;
   margin: 10px 0 18px;
 }
-.prompt-text{ font-size: clamp(22px, 4vw, 36px); }
+.prompt-text{ font-size: clamp(20px, 3.8vw, 36px); }
 
+/* Key grid: 2 x 13 */
 .key-grid{
   display: grid;
   grid-template-columns: repeat(13, minmax(40px, 1fr));
   gap: 8px;
-  max-width: 1000px;
+  width: min(96vw, 1000px);
   margin: 0 auto;
 }
 .key{
@@ -129,17 +144,18 @@ body{
   color: var(--teal-600);
   border-radius: 18px;
   box-shadow: var(--card-shadow);
+  cursor: pointer;
 }
 .key:active{ transform: translateY(1px); }
 .key.correct{ background: var(--success); color: white; border-color: var(--success); }
 .key.wrong{ animation: throb 160ms ease-in; border-color: var(--danger); }
 @keyframes throb { 50% { transform: scale(0.95); } }
-
 .key.disabled{ opacity: 0.6; pointer-events: none; }
 
 /* Modal */
 .modal{
-  position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+  position: fixed; inset: 0;
+  display: none; align-items: center; justify-content: center;
   background: rgba(0,0,0,0.25);
   padding: 20px;
 }
@@ -153,3 +169,8 @@ body{
   text-align: center;
 }
 .modal__actions{ display: flex; gap: 12px; justify-content: center; margin-top: 12px; }
+
+/* Prefer reduced motion: cut animations */
+@media (prefers-reduced-motion: reduce){
+  .key.wrong{ animation: none; }
+}
