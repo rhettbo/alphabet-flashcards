@@ -43,18 +43,31 @@ body{
 }
 .spacer{ flex: 1; }
 
+/* Let views fill the screen vertically */
+#app{
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;  /* handles mobile browser UI better than 100vh */
+}
+.view{
+  flex: 1;            /* main area takes remaining height under the header */
+}
+
+/* Top-align the flashcard view */
+#viewFlashcard.view--active{
+  display: flex;              /* override the grid centering */
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding-top: clamp(8px, 6vh, 64px); /* adjust this to move it further up/down */
+}
+
+
 .view{ display: none; padding: 16px; }
 .view--active{ display: grid; place-items: center; gap: 12px; }
 
-/* Push flashcard higher on the screen (only in Flashcard mode) */
-#viewFlashcard.view--active{
-  display: flex;                 /* override the grid centering */
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;   /* top */
-  gap: 12px;
-  padding-top: clamp(8px, 6vh, 64px); /* adjust this to taste */
-}
+
 
 
 .card-wrap{
