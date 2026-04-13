@@ -1,203 +1,371 @@
-:root{
-  --bg: #f5f6f3;        /* cream */
-  --ink: #1a1f1c;
-  --teal: #2b9aa7;
-  --teal-600: #267f89;
-  --success: #2aa874;   /* green */
-  --danger: #c94242;    /* red */
-  --muted: #b9c2bb;
-  --card-shadow: 0 8px 24px rgba(0,0,0,0.12);
+:root {
+  --bg: #f7f4ea;
+  --bg-deep: #dfeee2;
+  --panel: rgba(255, 255, 255, 0.88);
+  --panel-border: rgba(24, 57, 43, 0.14);
+  --ink: #193126;
+  --muted: #537062;
+  --accent: #18392b;
+  --accent-soft: #2f6b50;
+  --accent-warm: #ecb44b;
+  --shadow: 0 20px 50px rgba(25, 49, 38, 0.12);
+  --tile-shadow: 0 8px 18px rgba(25, 49, 38, 0.08);
 }
 
-*{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; }
-body{
-  margin:0;
-  font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Trebuchet MS", "Avenir Next", "Segoe UI", sans-serif;
   color: var(--ink);
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top left, rgba(236, 180, 75, 0.28), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(47, 107, 80, 0.18), transparent 28%),
+    linear-gradient(180deg, #fffdf6 0%, var(--bg) 45%, var(--bg-deep) 100%);
 }
 
-/* App layout: header + view fills the rest */
-#app{
-  min-height: 100dvh;                 /* better on mobile than 100vh */
-  display: flex;
-  flex-direction: column;
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-  padding-bottom: env(safe-area-inset-bottom);
+button {
+  font: inherit;
 }
 
-/* Header */
-.app-header{
-  position: sticky;
-  top: 0;
-  left: 0; right: 0;
-  display: flex; align-items: center; gap: 8px;
-  padding: calc(8px + env(safe-area-inset-top)) 12px 8px 12px;
-  background: var(--bg);
-  z-index: 10;
+.hidden {
+  display: none !important;
 }
-.spacer{ flex: 1; }
 
-.btn{
-  background: var(--teal);
-  color: white;
+.page-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 40px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.9fr);
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.hero__copy,
+.hero__status,
+.panel,
+.overlay__card,
+.modal__sheet {
+  backdrop-filter: blur(12px);
+}
+
+.hero__copy {
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.9), rgba(255, 252, 242, 0.85));
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.hero h1,
+.modal__sheet h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.02;
+}
+
+.hero h1 {
+  font-size: clamp(2.4rem, 5vw, 4.8rem);
+  max-width: 10ch;
+}
+
+.hero__text {
+  margin: 16px 0 0;
+  max-width: 52ch;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.hero__status {
+  display: grid;
+  gap: 14px;
+}
+
+.status-card,
+.panel,
+.overlay__card,
+.modal__sheet {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+}
+
+.status-card {
+  border-radius: 24px;
+  padding: 20px 22px;
+  display: grid;
+  gap: 6px;
+}
+
+.status-card__label,
+.control-block__label {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent-soft);
+  font-weight: 700;
+}
+
+.status-card__value {
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.pill-button,
+.segment,
+.action-button {
   border: 0;
-  padding: 10px 16px;
-  border-radius: 16px;
-  font-size: 16px;
-  box-shadow: var(--card-shadow);
+  border-radius: 999px;
   cursor: pointer;
-}
-.btn:active{ transform: translateY(1px); }
-.btn-ghost{
-  background: transparent;
-  color: var(--teal);
-  border: 2px solid var(--teal);
-  padding: 8px 12px;
-  border-radius: 16px;
-  box-shadow: none;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, color 120ms ease;
 }
 
-/* Views */
-.view{
-  display: none;          /* hidden by default */
-  flex: 1;                /* take remaining height */
-  padding: 16px;
+.pill-button:active,
+.segment:active,
+.action-button:active,
+.letter-tile:active {
+  transform: translateY(1px);
 }
-.view--active{
+
+.pill-button {
+  justify-self: start;
+  padding: 14px 22px;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: var(--tile-shadow);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.panel {
+  border-radius: 28px;
+  padding: 24px;
+}
+
+.panel--controls {
+  display: grid;
+  gap: 22px;
+}
+
+.control-block {
+  display: grid;
+  gap: 10px;
+}
+
+.segmented {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;  /* default center */
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.segment {
+  padding: 12px 18px;
+  background: #eff4ee;
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(24, 57, 43, 0.08);
+}
+
+.segment.is-active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 10px 18px rgba(24, 57, 43, 0.18);
+}
+
+.helper-text,
+.prompt-card__text,
+.score-line {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.prompt-card {
+  padding: 18px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(236, 180, 75, 0.12), rgba(255, 255, 255, 0.78));
+  border: 1px solid rgba(236, 180, 75, 0.28);
+}
+
+.prompt-card__text {
+  margin: 10px 0 18px;
+  min-height: 3.2em;
+  font-size: 1rem;
+}
+
+.prompt-card__actions,
+.modal__actions {
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
-/* Flashcard view: top align (overrides default) */
-#viewFlashcard.view--active{
-  justify-content: flex-start;               /* push toward top */
-  padding-top: clamp(8px, 2vh, 72px);        /* adjust to move higher/lower */
+.action-button {
+  padding: 13px 18px;
 }
 
-/* Card + sound icon */
-.card-wrap{
-  position: relative;
-  width: min(90vw, 640px);
-  aspect-ratio: 1 / 1;
-  display: grid; place-items: center;
-}
-.flashcard{
-  width: 70%;
-  height: 70%;
-  object-fit: contain;
-  border-radius: 24px;
-  box-shadow: var(--card-shadow);
-  user-select: none;
-}
-.icon-btn{
-  position: absolute;
-  right: 10px; bottom: 10px;
-  font-size: 22px;
-  background: white;
-  border: 2px solid var(--teal);
-  color: var(--teal);
-  border-radius: 999px;
-  padding: 6px 10px;
-  box-shadow: var(--card-shadow);
-  cursor: pointer;
-}
-#nextBtn {
-  position: absolute;
-  left: 10px;           /* mirror the right:10px from #phonemeBtn */
-  bottom: 10px;         /* same bottom alignment */
-  font-size: 28px;
-  padding: 10px 20px;
-  border-radius: 20px;
-  background: white;
-  color: var(--teal);
-  border: 2px solid var(--teal);
-  box-shadow: var(--card-shadow);
-  cursor: pointer;
+.action-button--primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: var(--tile-shadow);
 }
 
-/* Quiz prompt row */
-.quiz-prompt{
-  display: flex; align-items: center; gap: 10px;
-  justify-content: center;
-  margin: 10px 0 18px;
+.action-button--secondary {
+  background: #edf3ee;
+  color: var(--accent);
 }
-.prompt-text{ font-size: clamp(20px, 3.8vw, 36px); }
 
-/* Key grid: 2 x 13 */
-.key-grid{
+.panel--board {
+  padding: 28px;
+  overflow-x: auto;
+}
+
+.letter-grid {
   display: grid;
-  grid-template-columns: repeat(13, minmax(40px, 1fr));
-  gap: 8px;
-  width: min(96vw, 1000px);
-  margin: 0 auto;
+  grid-template-columns: repeat(13, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 720px;
 }
-.key{
-  display: grid; place-items: center;
+
+.letter-tile {
   aspect-ratio: 1 / 1;
-  min-width: 48px;
-  font-size: clamp(18px, 3.8vw, 28px);
-  background: white;
-  border: 2px solid var(--teal);
-  color: var(--teal-600);
-  border-radius: 18px;
-  box-shadow: var(--card-shadow);
+  border-radius: 22px;
+  border: 2px solid rgba(24, 57, 43, 0.14);
+  background: #fff;
+  color: var(--accent);
+  font-size: clamp(1.3rem, 2vw, 1.9rem);
+  font-weight: 700;
+  box-shadow: var(--tile-shadow);
   cursor: pointer;
 }
-.key:active{ transform: translateY(1px); }
-.key.correct{ background: var(--success); color: white; border-color: var(--success); }
-.key.wrong{ animation: throb 160ms ease-in; border-color: var(--danger); }
-@keyframes throb { 50% { transform: scale(0.95); } }
-.key.disabled{ opacity: 0.6; pointer-events: none; }
 
-/* Modal */
-.modal{
-  position: fixed; inset: 0;
-  display: none; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0.25);
-  padding: 20px;
+.letter-tile.is-locked {
+  cursor: default;
 }
-.modal[aria-hidden="false"]{ display: flex; }
-.modal__sheet{
-  background: white;
-  width: min(92vw, 540px);
-  border-radius: 24px;
-  padding: 20px;
-  box-shadow: var(--card-shadow);
+
+.letter-tile.is-wrong {
+  animation: shake 220ms ease;
+  border-color: #d45555;
+  color: #d45555;
+}
+
+@keyframes shake {
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+.overlay,
+.modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(25, 49, 38, 0.22);
+}
+
+.overlay.hidden,
+.modal.hidden {
+  display: none;
+}
+
+.overlay__card,
+.modal__sheet {
+  width: min(92vw, 480px);
+  border-radius: 28px;
+  padding: 26px;
   text-align: center;
 }
-.modal__actions{ display: flex; gap: 12px; justify-content: center; margin-top: 12px; }
 
-/* Prefer reduced motion: cut animations */
-@media (prefers-reduced-motion: reduce){
-  .key.wrong{ animation: none; }
+.bar {
+  width: 100%;
+  height: 12px;
+  margin-top: 14px;
+  background: rgba(24, 57, 43, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
 }
 
-/* 1) Tighten the header so the button sits near the very top */
-.app-header{
-  padding: 8px 12px; /* was calc(8px + env(...) ) ... keep it simple */
+.bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-soft), var(--accent-warm));
 }
 
-/* 2) Remove top padding from the view so content can reach the same Y as the button */
-.view{
-  padding: 0 16px 16px; /* no top padding */
+.score-line {
+  margin-top: 14px;
 }
 
-/* 3) Pull the flashcard up by the same amount so the top edge matches the button's top */
-#viewFlashcard .card-wrap{
-  margin-top: -40px;   /* matches the header's top padding above */
+@media (max-width: 960px) {
+  .hero,
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    max-width: none;
+  }
 }
 
-/* Keep the flashcard view top-aligned (not centered) */
-#viewFlashcard.view--active{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+@media (max-width: 720px) {
+  .page-shell {
+    width: min(100% - 20px, 100%);
+    padding-top: 14px;
+  }
+
+  .hero__copy,
+  .panel,
+  .status-card,
+  .overlay__card,
+  .modal__sheet {
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .letter-grid {
+    gap: 8px;
+  }
+
+  .letter-tile {
+    border-radius: 18px;
+    font-size: 1.2rem;
+  }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

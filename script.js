@@ -1,250 +1,416 @@
 (() => {
   const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-
-  // --- Utility: DOM ---
-  const $ = (sel) => document.querySelector(sel);
-  const viewFlashcard = $("#viewFlashcard");
-  const viewQuiz = $("#viewQuiz");
-  const flashcardImg = $("#flashcardImg");
-  const phonemeBtn = $("#phonemeBtn");
-  const nextBtn = $("#nextBtn");
-  const modeToggle = $("#modeToggle");
-  const keyGrid = $("#keyGrid");
-  const promptText = $("#promptText");
-  const promptSpeaker = $("#promptSpeaker");
-  const modal = $("#scoreModal");
-  const scoreLine = $("#scoreLine");
-  const playAgainBtn = $("#playAgainBtn");
-  const closeModalBtn = $("#closeModalBtn");
-  const resetBtn = $("#resetBtn");
-
-  // --- Paths (case rules) ---
-  const imagePath = (L) => `images/${L}.png`;                // uppercase for images
-  const nameAudio = (L) => `audio/letter ${L.toLowerCase()}.wav`;
-  const phonemeAudio = (L) => `audio/${L.toLowerCase()}.wav`;
-  const quizAudio = (L) => `audio/find ${L.toLowerCase()}.wav`;
-  const endRoundAudio = () => `audio/great_job.wav`;
-
-  // --- Audio Engine with fallback to TTS ---
-  let currentAudio = null;
-  function speakTTS(text) {
-    if (!("speechSynthesis" in window)) return;
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1; u.pitch = 1;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
-  }
-  function playSound(src, ttsFallbackText) {
-    return new Promise((resolve) => {
-      try {
-        if (currentAudio) currentAudio.pause();
-        const a = new Audio(src);
-        currentAudio = a;
-        a.onended = () => resolve();
-        a.onerror = () => { if (ttsFallbackText) speakTTS(ttsFallbackText); resolve(); };
-        a.play().catch(() => { if (ttsFallbackText) speakTTS(ttsFallbackText); resolve(); });
-      } catch {
-        if (ttsFallbackText) speakTTS(ttsFallbackText);
-        resolve();
-      }
-    });
-  }
-
-  // --- Grid state helper (used only on new round / reset) ---
-  function resetGridStates() {
-    keyGrid.querySelectorAll(".key").forEach(k => {
-      k.classList.remove("correct","wrong","disabled");
-      k.style.background = "";
-      k.style.color = "";
-      k.style.borderColor = "";
-    });
-  }
-
-  // --- Fisher–Yates shuffle ---
-  function shuffledDeck() {
-    const arr = LETTERS.slice();
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
-
-  // --- State ---
-  const state = {
-    mode: "flashcard",
-    // Flashcards
-    deck: shuffledDeck(),
-    deckPos: 0,
-    // Quiz
-    quizDeck: shuffledDeck(),   // 26 letters, random order, no repeats
-    quizPos: 0,
-    quizMisses: 0,
-    quizCorrectThisRound: 0,
-    autoplayQuizPrompt: true,
+  const COLORS = {
+    firstTry: "#0ff02a",
+    secondTry: "#abf4b4",
+    thirdTry: "#ffa7a7",
+    failed: "#ae0303",
   };
 
-  // --- Flashcards ---
-  function showFlashcard() {
-    const L = state.deck[state.deckPos];
-    flashcardImg.src = imagePath(L);
-    flashcardImg.alt = `Letter ${L}`;
-  }
-  function nextFlashcard() {
-    state.deckPos++;
-    if (state.deckPos >= state.deck.length) {
-      state.deck = shuffledDeck();
-      state.deckPos = 0;
-    }
-    showFlashcard();
+  const $ = (selector) => document.querySelector(selector);
+
+  const ui = {
+    progressText: $("#progressText"),
+    promptText: $("#promptText"),
+    letterGrid: $("#letterGrid"),
+    muteBtn: $("#muteBtn"),
+    playPromptBtn: $("#playPromptBtn"),
+    resetQuizBtn: $("#resetQuizBtn"),
+    practiceControls: $("#practiceControls"),
+    quizControls: $("#quizControls"),
+    loadingOverlay: $("#loadingOverlay"),
+    loadFill: $("#loadFill"),
+    scoreModal: $("#scoreModal"),
+    scoreTitle: $("#scoreTitle"),
+    scoreLine: $("#scoreLine"),
+    playAgainBtn: $("#playAgainBtn"),
+    closeModalBtn: $("#closeModalBtn"),
+  };
+
+  const state = {
+    mainMode: "practice",
+    practiceMode: "name",
+    muted: false,
+    quizOrder: [],
+    quizIndex: 0,
+    guessesThisLetter: 0,
+    firstTryCorrect: 0,
+    resolvedLetters: new Set(),
+    quizComplete: false,
+    activeAudio: null,
+    audio: {
+      sound: new Map(),
+      name: new Map(),
+      find: new Map(),
+      greatJob: null,
+    },
+  };
+
+  function getAudioPath(kind, letter) {
+    const lower = letter.toLowerCase();
+    if (kind === "sound") return `audio/${lower}.wav`;
+    if (kind === "name") return `audio/letter ${lower}.wav`;
+    if (kind === "find") return `audio/find ${lower}.wav`;
+    return "";
   }
 
-  // --- Quiz grid ---
-  function buildGrid() {
-    keyGrid.innerHTML = "";
-    LETTERS.forEach(L => {
-      const btn = document.createElement("button");
-      btn.className = "key";
-      btn.textContent = L;
-      btn.setAttribute("role","gridcell");
-      btn.setAttribute("data-letter", L);
-      keyGrid.appendChild(btn);
+  function getTile(letter) {
+    return ui.letterGrid.querySelector(`[data-letter="${letter}"]`);
+  }
+
+  function stopAudio() {
+    if (state.activeAudio) {
+      state.activeAudio.pause();
+      state.activeAudio.currentTime = 0;
+      state.activeAudio = null;
+    }
+  }
+
+  function playAudio(audio) {
+    if (state.muted || !audio) return Promise.resolve();
+    stopAudio();
+    state.activeAudio = audio;
+    audio.currentTime = 0;
+
+    return new Promise((resolve) => {
+      const done = () => {
+        if (state.activeAudio === audio) state.activeAudio = null;
+        resolve();
+      };
+
+      audio.onended = done;
+      audio.onerror = done;
+      audio.play().catch(done);
     });
   }
 
-  // --- New round / hard reset ---
-  function hardResetRound() {
-    modal.setAttribute("aria-hidden","true");
-    state.quizDeck = shuffledDeck();
-    state.quizPos = 0;
-    state.quizMisses = 0;
-    state.quizCorrectThisRound = 0;
-    resetGridStates();               // clear persistent colors
-    if (state.mode !== "quiz") setMode("quiz");
-    setQuizTarget();
+  function preloadAudio() {
+    const assets = [];
+
+    LETTERS.forEach((letter) => {
+      ["sound", "name", "find"].forEach((kind) => {
+        const audio = new Audio(getAudioPath(kind, letter));
+        audio.preload = "auto";
+        state.audio[kind].set(letter, audio);
+        assets.push(audio);
+      });
+    });
+
+    const greatJob = new Audio("audio/great_job.wav");
+    greatJob.preload = "auto";
+    state.audio.greatJob = greatJob;
+    assets.push(greatJob);
+
+    let completed = 0;
+    if (!assets.length) return Promise.resolve();
+
+    ui.loadingOverlay.classList.remove("hidden");
+    ui.loadingOverlay.setAttribute("aria-hidden", "false");
+
+    return new Promise((resolve) => {
+      const markDone = () => {
+        completed += 1;
+        ui.loadFill.style.width = `${Math.round((completed / assets.length) * 100)}%`;
+        if (completed === assets.length) {
+          window.setTimeout(() => {
+            ui.loadingOverlay.classList.add("hidden");
+            ui.loadingOverlay.setAttribute("aria-hidden", "true");
+            resolve();
+          }, 180);
+        }
+      };
+
+      assets.forEach((audio) => {
+        const handle = () => markDone();
+        audio.addEventListener("canplaythrough", handle, { once: true });
+        audio.addEventListener("error", handle, { once: true });
+        audio.load();
+      });
+    });
   }
 
-  // --- Set current quiz target (no clearing of past key colors) ---
-  function setQuizTarget() {
-    if (state.quizPos >= state.quizDeck.length) {
-      // End of the 26-letter round
-      const correct = state.quizCorrectThisRound;
-      const pct = Math.round((correct / 26) * 100);
-      scoreLine.textContent = `${correct} / 26 (${pct}%)`;
-      modal.setAttribute("aria-hidden", "false");
-      playSound(endRoundAudio());
-      // Prep next round but keep grid colors until reset/play again
-      state.quizDeck = shuffledDeck();
-      state.quizPos = 0;
-      state.quizCorrectThisRound = 0;
+  function shuffle(items) {
+    const copy = items.slice();
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  function setSegmentState(selector, attribute, value) {
+    document.querySelectorAll(selector).forEach((button) => {
+      button.classList.toggle("is-active", button.getAttribute(attribute) === value);
+    });
+  }
+
+  function currentQuizLetter() {
+    return state.quizOrder[state.quizIndex] || null;
+  }
+
+  function updateProgressText() {
+    if (state.mainMode === "practice") {
+      const modeLabel = state.practiceMode === "name" ? "Letter Name" : "Letter Sound";
+      ui.progressText.textContent = `Practice Mode: ${modeLabel}`;
       return;
     }
-    state.quizMisses = 0;
-    const target = state.quizDeck[state.quizPos];
-    promptText.textContent = "Find the letter";
-    if (state.autoplayQuizPrompt) playSound(quizAudio(target), `Find ${target}`);
+
+    const cleared = state.resolvedLetters.size;
+    ui.progressText.textContent = `Quiz Progress: ${cleared}/26 cleared | First-try score: ${state.firstTryCorrect}`;
   }
 
-  // --- Handle key taps ---
-  function onKeyTap(L, btn) {
-    const target = state.quizDeck[state.quizPos];
-    if (btn.classList.contains("disabled")) return;
+  function updatePromptText() {
+    if (state.mainMode === "practice") {
+      ui.promptText.textContent = state.practiceMode === "name"
+        ? "Tap any tile to hear its letter name."
+        : "Tap any tile to hear its letter sound.";
+      return;
+    }
 
-    if (L === target) {
-      btn.classList.add("correct", "disabled");   // persist green
-      if (state.quizMisses < 3) {
-        state.quizCorrectThisRound++;
-      }
-      state.quizPos++;
-      setTimeout(setQuizTarget, 600);
-    } else {
-      state.quizMisses++;
-      btn.classList.add("wrong");
-      setTimeout(() => btn.classList.remove("wrong"), 150);
-      if (state.quizMisses >= 3) {
-        // Persist red on the correct target and advance
-        const targetBtn = [...keyGrid.querySelectorAll(".key")]
-          .find(b => b.textContent === target);
-        if (targetBtn) {
-          targetBtn.classList.add("disabled");
-          targetBtn.style.background = "var(--danger)";
-          targetBtn.style.color = "white";
-          targetBtn.style.borderColor = "var(--danger)";
-        }
-        state.quizPos++;
-        setTimeout(setQuizTarget, 600);
-      }
+    const target = currentQuizLetter();
+    if (!target) {
+      ui.promptText.textContent = "Quiz complete.";
+      return;
+    }
+
+    const remaining = 3 - state.guessesThisLetter;
+    ui.promptText.textContent = `Find letter ${target}. ${remaining} guess${remaining === 1 ? "" : "es"} left.`;
+  }
+
+  function updateControlVisibility() {
+    const inPractice = state.mainMode === "practice";
+    ui.practiceControls.classList.toggle("hidden", !inPractice);
+    ui.quizControls.classList.toggle("hidden", inPractice);
+    ui.playPromptBtn.classList.toggle("hidden", inPractice);
+    ui.resetQuizBtn.classList.toggle("hidden", inPractice);
+  }
+
+  function setTileLocked(letter, color) {
+    const tile = getTile(letter);
+    if (!tile) return;
+    tile.disabled = true;
+    tile.classList.add("is-locked");
+    tile.style.background = color;
+    tile.style.borderColor = color;
+    tile.style.color = color === COLORS.failed ? "#ffffff" : "#123320";
+  }
+
+  function pulseTile(tile) {
+    tile.classList.remove("is-wrong");
+    void tile.offsetWidth;
+    tile.classList.add("is-wrong");
+  }
+
+  function renderTiles() {
+    ui.letterGrid.innerHTML = "";
+
+    LETTERS.forEach((letter) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "letter-tile";
+      button.textContent = letter;
+      button.setAttribute("role", "gridcell");
+      button.setAttribute("data-letter", letter);
+      ui.letterGrid.appendChild(button);
+    });
+  }
+
+  function resetTiles() {
+    ui.letterGrid.querySelectorAll(".letter-tile").forEach((tile) => {
+      tile.disabled = false;
+      tile.classList.remove("is-locked", "is-wrong");
+      tile.style.background = "";
+      tile.style.borderColor = "";
+      tile.style.color = "";
+    });
+  }
+
+  function showScoreModal() {
+    const score = state.firstTryCorrect;
+    const isPerfect = score === 26;
+
+    ui.scoreTitle.textContent = isPerfect ? "Great job, 26/26" : "Quiz complete";
+    ui.scoreLine.textContent = isPerfect
+      ? "Every letter was correct on the first guess."
+      : `You got ${score} out of 26 letters on the first try.`;
+
+    ui.scoreModal.classList.remove("hidden");
+    ui.scoreModal.setAttribute("aria-hidden", "false");
+
+    if (isPerfect) {
+      playAudio(state.audio.greatJob);
     }
   }
 
-  // --- View/Mode switching ---
-  function showView(id) {
-    [viewFlashcard, viewQuiz].forEach(v => { v.classList.remove("view--active"); v.hidden = true; });
-    const el = (id === "flashcard") ? viewFlashcard : viewQuiz;
-    el.classList.add("view--active"); el.hidden = false;
+  function closeScoreModal() {
+    ui.scoreModal.classList.add("hidden");
+    ui.scoreModal.setAttribute("aria-hidden", "true");
   }
 
-  function setMode(mode) {
-    state.mode = mode;
-    if (mode === "flashcard") {
-      modeToggle.textContent = "Quiz Mode";
-      resetBtn.hidden = true;
-      showView("flashcard");
-      showFlashcard();
-    } else {
-      modeToggle.textContent = "Flashcards";
-      resetBtn.hidden = false;
-      showView("quiz");
-      // Do NOT clear key colors here; they persist through the round
-      setQuizTarget();
+  function finishQuiz() {
+    state.quizComplete = true;
+    updateProgressText();
+    ui.promptText.textContent = "All letters completed.";
+    showScoreModal();
+  }
+
+  function beginQuizRound() {
+    closeScoreModal();
+    stopAudio();
+    state.quizOrder = shuffle(LETTERS);
+    state.quizIndex = 0;
+    state.guessesThisLetter = 0;
+    state.firstTryCorrect = 0;
+    state.quizComplete = false;
+    state.resolvedLetters = new Set();
+    resetTiles();
+    updateProgressText();
+    updatePromptText();
+    playCurrentPrompt();
+  }
+
+  function switchMainMode(mode) {
+    state.mainMode = mode;
+    setSegmentState("[data-main-mode]", "data-main-mode", mode);
+    updateControlVisibility();
+    closeScoreModal();
+    stopAudio();
+
+    if (mode === "practice") {
+      updateProgressText();
+      updatePromptText();
+      return;
+    }
+
+    beginQuizRound();
+  }
+
+  function switchPracticeMode(mode) {
+    state.practiceMode = mode;
+    setSegmentState("[data-practice-mode]", "data-practice-mode", mode);
+    updateProgressText();
+    updatePromptText();
+  }
+
+  function playCurrentPrompt() {
+    if (state.mainMode === "practice") {
+      ui.promptText.textContent = state.practiceMode === "name"
+        ? "Tap a tile to hear its letter name."
+        : "Tap a tile to hear its letter sound.";
+      return Promise.resolve();
+    }
+
+    const target = currentQuizLetter();
+    if (!target || state.quizComplete) return Promise.resolve();
+    updatePromptText();
+    return playAudio(state.audio.find.get(target));
+  }
+
+  function handlePracticeTile(letter) {
+    const audioMap = state.practiceMode === "name" ? state.audio.name : state.audio.sound;
+    playAudio(audioMap.get(letter));
+  }
+
+  function advanceQuizAfterDelay() {
+    window.setTimeout(() => {
+      state.quizIndex += 1;
+      state.guessesThisLetter = 0;
+
+      if (state.quizIndex >= state.quizOrder.length) {
+        finishQuiz();
+        return;
+      }
+
+      updateProgressText();
+      updatePromptText();
+      playCurrentPrompt();
+    }, 550);
+  }
+
+  function resolveQuizLetter(letter, color, firstTryScored) {
+    state.resolvedLetters.add(letter);
+    if (firstTryScored) state.firstTryCorrect += 1;
+    setTileLocked(letter, color);
+    updateProgressText();
+    advanceQuizAfterDelay();
+  }
+
+  function handleQuizTile(letter, tile) {
+    if (state.quizComplete || state.resolvedLetters.has(letter)) return;
+
+    const target = currentQuizLetter();
+    if (!target) return;
+
+    if (letter === target) {
+      const attemptNumber = state.guessesThisLetter + 1;
+      const color = attemptNumber === 1
+        ? COLORS.firstTry
+        : attemptNumber === 2
+          ? COLORS.secondTry
+          : COLORS.thirdTry;
+
+      resolveQuizLetter(letter, color, attemptNumber === 1);
+      return;
+    }
+
+    state.guessesThisLetter += 1;
+    pulseTile(tile);
+    updatePromptText();
+
+    if (state.guessesThisLetter >= 3) {
+      resolveQuizLetter(target, COLORS.failed, false);
     }
   }
 
-  // --- Events ---
-  flashcardImg.addEventListener("click", () => {
-    const L = state.deck[state.deckPos];
-    playSound(nameAudio(L), L);
-  });
-  phonemeBtn.addEventListener("click", () => {
-    const L = state.deck[state.deckPos];
-    playSound(phonemeAudio(L), L);
-  });
-  nextBtn.addEventListener("click", nextFlashcard);
+  function onTileClick(event) {
+    const tile = event.target.closest(".letter-tile");
+    if (!tile) return;
 
-  modeToggle.addEventListener("click", () => {
-    setMode(state.mode === "flashcard" ? "quiz" : "flashcard");
-  });
+    const letter = tile.getAttribute("data-letter");
+    if (state.mainMode === "practice") {
+      handlePracticeTile(letter);
+      return;
+    }
 
-  promptSpeaker.addEventListener("click", () => {
-    const target = state.quizDeck[state.quizPos];
-    playSound(quizAudio(target), `Find ${target}`);
-  });
+    handleQuizTile(letter, tile);
+  }
 
-  keyGrid.addEventListener("click", (e) => {
-    const btn = e.target.closest(".key");
-    if (!btn) return;
-    const L = btn.getAttribute("data-letter");
-    onKeyTap(L, btn);
-  });
+  function bindEvents() {
+    document.querySelectorAll("[data-main-mode]").forEach((button) => {
+      button.addEventListener("click", () => switchMainMode(button.getAttribute("data-main-mode")));
+    });
 
-  playAgainBtn.addEventListener("click", () => {
-    // Start a fresh round immediately and clear colors
-    hardResetRound();
-  });
+    document.querySelectorAll("[data-practice-mode]").forEach((button) => {
+      button.addEventListener("click", () => switchPracticeMode(button.getAttribute("data-practice-mode")));
+    });
 
-  closeModalBtn.addEventListener("click", () => modal.setAttribute("aria-hidden","true"));
+    ui.letterGrid.addEventListener("click", onTileClick);
+    ui.playPromptBtn.addEventListener("click", () => playCurrentPrompt());
+    ui.resetQuizBtn.addEventListener("click", beginQuizRound);
+    ui.playAgainBtn.addEventListener("click", beginQuizRound);
+    ui.closeModalBtn.addEventListener("click", closeScoreModal);
+    ui.muteBtn.addEventListener("click", () => {
+      state.muted = !state.muted;
+      if (state.muted) stopAudio();
+      ui.muteBtn.textContent = state.muted ? "Sound Off" : "Sound On";
+      ui.muteBtn.setAttribute("aria-pressed", String(state.muted));
+    });
+  }
 
-  resetBtn.addEventListener("click", hardResetRound);
+  async function init() {
+    renderTiles();
+    bindEvents();
+    updateControlVisibility();
+    updateProgressText();
+    updatePromptText();
+    await preloadAudio();
+  }
 
-  // --- Init ---
-  buildGrid();
-  showFlashcard();
-  setMode("flashcard");
+  init();
 
-  // --- PWA SW ---
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('service-worker.js').catch(console.error);
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js").catch(console.error);
     });
   }
 })();
