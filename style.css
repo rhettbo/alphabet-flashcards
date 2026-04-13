@@ -260,6 +260,13 @@ button {
   gap: 8px;
 }
 
+.drop-zone__shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
 .drop-zone__count {
   min-width: 36px;
   min-height: 36px;
@@ -280,6 +287,13 @@ button {
   color: #934ef0;
   font-weight: 700;
   cursor: pointer;
+}
+
+.mini-action-button:disabled,
+.action-button:disabled,
+.segment:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .mini-letter-grid {
@@ -354,6 +368,14 @@ button {
   border-color: #d45555;
   color: #d45555;
   background: #fff2f2;
+}
+
+.letter-tile.is-unavailable {
+  background: rgba(236, 239, 245, 0.72);
+  border-color: rgba(125, 79, 237, 0.08);
+  color: rgba(79, 100, 132, 0.45);
+  box-shadow: none;
+  cursor: default;
 }
 
 @keyframes shake {

@@ -6,6 +6,8 @@
     thirdTry: "#ffa7a7",
     failed: "#ae0303",
   };
+  const TOP_ROW_LETTERS = LETTERS.slice(0, 13);
+  const BOTTOM_ROW_LETTERS = LETTERS.slice(13);
 
   const $ = (selector) => document.querySelector(selector);
 
@@ -20,7 +22,9 @@
     selectedLetters: $("#selectedLetters"),
     availableLetters: $("#availableLetters"),
     selectedCount: $("#selectedCount"),
-    resetSelectedLettersBtn: $("#resetSelectedLettersBtn"),
+    selectAllLettersBtn: $("#selectAllLettersBtn"),
+    selectTopRowBtn: $("#selectTopRowBtn"),
+    selectBottomRowBtn: $("#selectBottomRowBtn"),
     selectedZone: $("#selectedZone"),
     availableZone: $("#availableZone"),
     loadingOverlay: $("#loadingOverlay"),
@@ -35,7 +39,7 @@
   const state = {
     mainMode: "practice",
     practiceMode: "name",
-    selectedQuizLetters: LETTERS.slice(),
+    selectedQuizLetters: [],
     quizOrder: [],
     quizIndex: 0,
     guessesThisLetter: 0,
@@ -168,6 +172,11 @@
       return;
     }
 
+    if (state.selectedQuizLetters.length === 0) {
+      ui.progressText.textContent = "Quiz Mode: choose letters to include";
+      return;
+    }
+
     const cleared = state.resolvedLetters.size;
     ui.progressText.textContent = `Quiz Progress: ${cleared}/${state.quizOrder.length || state.selectedQuizLetters.length} cleared | First-try score: ${state.firstTryCorrect}`;
   }
@@ -188,6 +197,23 @@
     tile.style.background = color;
     tile.style.borderColor = color;
     tile.style.color = color === COLORS.failed ? "#ffffff" : "#123320";
+  }
+
+  function updateBoardAvailability() {
+    ui.letterGrid.querySelectorAll(".letter-tile").forEach((tile) => {
+      const letter = tile.getAttribute("data-letter");
+      const isAvailable = state.mainMode === "practice" || state.selectedQuizLetters.includes(letter);
+      const isLocked = tile.classList.contains("is-locked");
+
+      tile.classList.toggle("is-unavailable", !isAvailable);
+      if (!isLocked) {
+        tile.disabled = !isAvailable;
+      }
+    });
+
+    const hasQuizLetters = state.selectedQuizLetters.length > 0;
+    ui.playPromptBtn.disabled = state.mainMode === "quiz" && !hasQuizLetters;
+    ui.resetQuizBtn.disabled = state.mainMode === "quiz" && !hasQuizLetters;
   }
 
   function pulseTile(tile) {
@@ -213,11 +239,12 @@
   function resetTiles() {
     ui.letterGrid.querySelectorAll(".letter-tile").forEach((tile) => {
       tile.disabled = false;
-      tile.classList.remove("is-locked", "is-wrong");
+      tile.classList.remove("is-locked", "is-wrong", "is-unavailable");
       tile.style.background = "";
       tile.style.borderColor = "";
       tile.style.color = "";
     });
+    updateBoardAvailability();
   }
 
   function clearMissedTiles() {
@@ -256,7 +283,6 @@
     }
 
     if (targetZone === "available" && isSelected) {
-      if (state.selectedQuizLetters.length === 1) return;
       state.selectedQuizLetters = state.selectedQuizLetters.filter((item) => item !== letter);
     }
 
@@ -268,12 +294,15 @@
     }
   }
 
-  function resetSelectedLetters() {
-    state.selectedQuizLetters = LETTERS.slice();
+  function setSelectedLetters(letters) {
+    state.selectedQuizLetters = LETTERS.filter((letter) => letters.includes(letter));
     renderQuizPicker();
+    updateBoardAvailability();
 
     if (state.mainMode === "quiz") {
       beginQuizRound();
+    } else {
+      updateProgressText();
     }
   }
 
@@ -316,6 +345,7 @@
     state.resolvedLetters = new Set();
     resetTiles();
     updateProgressText();
+    updateBoardAvailability();
     if (state.quizOrder.length > 0) {
       playCurrentPrompt();
     }
@@ -332,6 +362,7 @@
 
     if (mode === "practice") {
       updateProgressText();
+      updateBoardAvailability();
       return;
     }
 
@@ -432,7 +463,9 @@
     ui.letterGrid.addEventListener("click", onTileClick);
     ui.playPromptBtn.addEventListener("click", () => playCurrentPrompt());
     ui.resetQuizBtn.addEventListener("click", beginQuizRound);
-    ui.resetSelectedLettersBtn.addEventListener("click", resetSelectedLetters);
+    ui.selectAllLettersBtn.addEventListener("click", () => setSelectedLetters(LETTERS));
+    ui.selectTopRowBtn.addEventListener("click", () => setSelectedLetters(TOP_ROW_LETTERS));
+    ui.selectBottomRowBtn.addEventListener("click", () => setSelectedLetters(BOTTOM_ROW_LETTERS));
     ui.playAgainBtn.addEventListener("click", beginQuizRound);
     ui.closeModalBtn.addEventListener("click", closeScoreModal);
 
@@ -478,6 +511,7 @@
     bindEvents();
     updateControlVisibility();
     updateProgressText();
+    updateBoardAvailability();
     await preloadAudio();
   }
 
