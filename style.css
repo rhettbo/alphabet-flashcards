@@ -166,7 +166,7 @@ button {
 .panel--controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
   align-items: end;
 }
 
@@ -174,21 +174,23 @@ button {
   display: grid;
   gap: 10px;
   min-width: 220px;
-  flex: 1 1 240px;
+  flex: 1 1 260px;
 }
 
 .segmented {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
 }
 
 .segment {
-  padding: 12px 18px;
+  min-height: 64px;
+  padding: 16px 24px;
   background: rgba(255, 248, 223, 0.88);
   color: #934ef0;
   box-shadow: inset 0 0 0 2px rgba(143, 77, 232, 0.14);
   font-weight: 700;
+  font-size: 1.08rem;
 }
 
 .segment.is-active {
@@ -204,8 +206,8 @@ button {
 }
 
 .segment--icon img {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
 }
 
 .score-line {
@@ -222,8 +224,10 @@ button {
 }
 
 .action-button {
-  padding: 13px 18px;
+  min-height: 64px;
+  padding: 16px 24px;
   font-weight: 700;
+  font-size: 1.08rem;
 }
 
 .action-button--primary {
@@ -246,7 +250,7 @@ button {
   width: min(80%, 1180px);
   margin: 0 auto;
   grid-template-columns: repeat(13, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .letter-tile {
@@ -256,7 +260,7 @@ button {
   border: 3px solid rgba(125, 79, 237, 0.16);
   background: #fff;
   color: #ff6c35;
-  font-size: clamp(1.7rem, 2.8vw, 2.6rem);
+  font-size: clamp(1.9rem, 3vw, 2.8rem);
   font-weight: 700;
   box-shadow: var(--tile-shadow);
   cursor: pointer;
@@ -345,12 +349,19 @@ button {
 
   .letter-grid {
     width: 100%;
-    gap: 6px;
+    gap: 8px;
   }
 
   .letter-tile {
     border-radius: 18px;
-    font-size: clamp(1.35rem, 4.2vw, 2rem);
+    font-size: clamp(1.45rem, 4.5vw, 2.2rem);
+  }
+
+  .segment,
+  .action-button {
+    min-height: 58px;
+    padding: 14px 20px;
+    font-size: 1rem;
   }
 }
 
