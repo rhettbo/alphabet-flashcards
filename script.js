@@ -203,6 +203,15 @@
     });
   }
 
+  function clearMissedTiles() {
+    ui.letterGrid.querySelectorAll(".letter-tile:not(.is-locked)").forEach((tile) => {
+      tile.classList.remove("is-wrong");
+      tile.style.background = "";
+      tile.style.borderColor = "";
+      tile.style.color = "";
+    });
+  }
+
   function showScoreModal() {
     const score = state.firstTryCorrect;
     const isPerfect = score === 26;
@@ -281,6 +290,7 @@
 
   function advanceQuizAfterDelay() {
     window.setTimeout(() => {
+      clearMissedTiles();
       state.quizIndex += 1;
       state.guessesThisLetter = 0;
 
