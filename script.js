@@ -186,7 +186,7 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "letter-tile";
-      button.textContent = letter;
+      button.textContent = `${letter}${letter.toLowerCase()}`;
       button.setAttribute("role", "gridcell");
       button.setAttribute("data-letter", letter);
       ui.letterGrid.appendChild(button);
