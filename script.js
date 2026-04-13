@@ -20,6 +20,7 @@
     selectedLetters: $("#selectedLetters"),
     availableLetters: $("#availableLetters"),
     selectedCount: $("#selectedCount"),
+    resetSelectedLettersBtn: $("#resetSelectedLettersBtn"),
     selectedZone: $("#selectedZone"),
     availableZone: $("#availableZone"),
     loadingOverlay: $("#loadingOverlay"),
@@ -267,6 +268,15 @@
     }
   }
 
+  function resetSelectedLetters() {
+    state.selectedQuizLetters = LETTERS.slice();
+    renderQuizPicker();
+
+    if (state.mainMode === "quiz") {
+      beginQuizRound();
+    }
+  }
+
   function showScoreModal() {
     const score = state.firstTryCorrect;
     const isPerfect = score === 26;
@@ -422,6 +432,7 @@
     ui.letterGrid.addEventListener("click", onTileClick);
     ui.playPromptBtn.addEventListener("click", () => playCurrentPrompt());
     ui.resetQuizBtn.addEventListener("click", beginQuizRound);
+    ui.resetSelectedLettersBtn.addEventListener("click", resetSelectedLetters);
     ui.playAgainBtn.addEventListener("click", beginQuizRound);
     ui.closeModalBtn.addEventListener("click", closeScoreModal);
 

@@ -63,7 +63,10 @@
               <div class="drop-zone" id="selectedZone" data-zone="selected">
                 <div class="drop-zone__header">
                   <span>Quiz Letters</span>
-                  <span id="selectedCount" class="drop-zone__count">26</span>
+                  <div class="drop-zone__actions">
+                    <button id="resetSelectedLettersBtn" class="mini-action-button" type="button">Reset</button>
+                    <span id="selectedCount" class="drop-zone__count">26</span>
+                  </div>
                 </div>
                 <div id="selectedLetters" class="mini-letter-grid" aria-label="Selected quiz letters"></div>
               </div>
