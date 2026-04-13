@@ -1,7 +1,7 @@
 :root {
   --bg: #87d8ff;
   --bg-deep: #63bff5;
-  --panel: rgba(255, 255, 255, 0.9);
+  --panel: transparent;
   --panel-border: rgba(110, 80, 255, 0.14);
   --ink: #18304c;
   --muted: #4f6484;
@@ -9,7 +9,7 @@
   --accent-soft: #8f4de8;
   --accent-warm: #ffd54a;
   --shadow: 0 18px 40px rgba(35, 87, 163, 0.2);
-  --tile-shadow: 0 10px 0 rgba(61, 113, 188, 0.22);
+  --tile-shadow: 0 5px 0 rgba(61, 113, 188, 0.22);
   --tile-size: clamp(64px, 7vw, 104px);
 }
 
@@ -65,11 +65,11 @@ button {
 }
 
 .hero__copy {
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 245, 209, 0.84));
-  border: 1px solid var(--panel-border);
+  background: transparent;
+  border: 0;
   border-radius: 24px;
   padding: 18px 22px;
-  box-shadow: var(--shadow);
+  box-shadow: none;
 }
 
 .eyebrow {
@@ -105,13 +105,13 @@ button {
 .overlay__card,
 .modal__sheet {
   background: var(--panel);
-  border: 1px solid var(--panel-border);
-  box-shadow: var(--shadow);
+  border: 0;
+  box-shadow: none;
 }
 
 .status-card {
   border-radius: 24px;
-  padding: 16px 20px;
+  padding: 10px 6px;
   display: grid;
   gap: 6px;
 }
@@ -153,7 +153,7 @@ button {
 
 .panel {
   border-radius: 24px;
-  padding: 18px;
+  padding: 8px 0;
 }
 
 .panel--controls {
@@ -178,7 +178,7 @@ button {
 
 .segment {
   padding: 12px 18px;
-  background: #fff8df;
+  background: rgba(255, 248, 223, 0.88);
   color: #934ef0;
   box-shadow: inset 0 0 0 2px rgba(143, 77, 232, 0.14);
   font-weight: 700;
@@ -226,17 +226,18 @@ button {
 }
 
 .action-button--secondary {
-  background: #fff7d6;
+  background: rgba(255, 247, 214, 0.9);
   color: #935418;
 }
 
 .panel--board {
-  padding: 14px;
+  padding: 6px 0 0;
 }
 
 .letter-grid {
   display: grid;
-  width: 100%;
+  width: 80%;
+  margin: 0 auto;
   grid-template-columns: repeat(13, minmax(var(--tile-size), 1fr));
   gap: 10px;
 }
@@ -336,6 +337,7 @@ button {
   }
 
   .letter-grid {
+    width: 88%;
     gap: 6px;
   }
 
