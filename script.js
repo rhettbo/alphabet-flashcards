@@ -25,6 +25,7 @@
     selectAllLettersBtn: $("#selectAllLettersBtn"),
     selectTopRowBtn: $("#selectTopRowBtn"),
     selectBottomRowBtn: $("#selectBottomRowBtn"),
+    clearSelectedLettersBtn: $("#clearSelectedLettersBtn"),
     selectedZone: $("#selectedZone"),
     availableZone: $("#availableZone"),
     loadingOverlay: $("#loadingOverlay"),
@@ -466,6 +467,7 @@
     ui.selectAllLettersBtn.addEventListener("click", () => setSelectedLetters(LETTERS));
     ui.selectTopRowBtn.addEventListener("click", () => setSelectedLetters(TOP_ROW_LETTERS));
     ui.selectBottomRowBtn.addEventListener("click", () => setSelectedLetters(BOTTOM_ROW_LETTERS));
+    ui.clearSelectedLettersBtn.addEventListener("click", () => setSelectedLetters([]));
     ui.playAgainBtn.addEventListener("click", beginQuizRound);
     ui.closeModalBtn.addEventListener("click", closeScoreModal);
 
