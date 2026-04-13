@@ -79,18 +79,20 @@
   function playAudio(audio) {
     if (!audio) return Promise.resolve();
     stopAudio();
-    state.activeAudio = audio;
-    audio.currentTime = 0;
+    const player = audio.cloneNode(true);
+    player.preload = "auto";
+    state.activeAudio = player;
+    player.currentTime = 0;
 
     return new Promise((resolve) => {
       const done = () => {
-        if (state.activeAudio === audio) state.activeAudio = null;
+        if (state.activeAudio === player) state.activeAudio = null;
         resolve();
       };
 
-      audio.onended = done;
-      audio.onerror = done;
-      audio.play().catch(done);
+      player.onended = done;
+      player.onerror = done;
+      player.play().catch(done);
     });
   }
 
