@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v2.0.0";
+const CACHE_VERSION = "v2.1.0";
 const CACHE_NAME = `alphabet-game-${CACHE_VERSION}`;
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -8,6 +8,8 @@ const CORE_ASSETS = [
   "./style.css",
   "./script.js",
   "./manifest.webmanifest",
+  "./icons/ABC favicon .jpg",
+  "./icons/ear.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
 ];

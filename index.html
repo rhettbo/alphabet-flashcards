@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/ABC favicon .jpg" type="image/jpeg">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <title>Alphabet Game</title>
     <link rel="stylesheet" href="style.css" />
@@ -16,11 +17,7 @@
       <header class="hero">
         <div class="hero__copy">
           <p class="eyebrow">Alphabet Game</p>
-          <h1>Practice letters. Then quiz them.</h1>
-          <p class="hero__text">
-            Use Practice Mode for letter names or sounds. Switch to Quiz Mode for randomized
-            find-the-letter prompts across all 26 tiles.
-          </p>
+          <h1>ABC Fun</h1>
         </div>
 
         <div class="hero__status">
@@ -28,7 +25,6 @@
             <span class="status-card__label">Status</span>
             <span id="progressText" class="status-card__value">Practice Mode: Letter Name</span>
           </div>
-          <button id="muteBtn" class="pill-button" type="button" aria-pressed="false">Sound On</button>
         </div>
       </header>
 
@@ -46,25 +42,20 @@
             <span class="control-block__label">Practice Audio</span>
             <div class="segmented">
               <button class="segment is-active" data-practice-mode="name" type="button">Letter Name</button>
-              <button class="segment" data-practice-mode="sound" type="button">Letter Sound</button>
+              <button class="segment segment--icon" data-practice-mode="sound" type="button">
+                <img src="icons/ear.svg" alt="" aria-hidden="true">
+                <span>Letter Sound</span>
+              </button>
             </div>
           </div>
 
           <div class="control-block hidden" id="quizControls">
-            <span class="control-block__label">Quiz Rules</span>
-            <p class="helper-text">
-              Each prompt plays in random order. You get three guesses. Only first-try correct answers count toward the final score.
-            </p>
-          </div>
-
-          <section class="prompt-card" aria-live="polite">
-            <span class="control-block__label">Prompt</span>
-            <p id="promptText" class="prompt-card__text">Tap any tile to hear its letter name.</p>
+            <span class="control-block__label">Quiz Controls</span>
             <div class="prompt-card__actions">
-              <button id="playPromptBtn" class="action-button action-button--primary" type="button">Play Prompt</button>
+              <button id="playPromptBtn" class="action-button action-button--primary" type="button">Play Sound</button>
               <button id="resetQuizBtn" class="action-button action-button--secondary hidden" type="button">Restart Quiz</button>
             </div>
-          </section>
+          </div>
         </section>
 
         <section class="panel panel--board">

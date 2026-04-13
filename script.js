@@ -11,9 +11,7 @@
 
   const ui = {
     progressText: $("#progressText"),
-    promptText: $("#promptText"),
     letterGrid: $("#letterGrid"),
-    muteBtn: $("#muteBtn"),
     playPromptBtn: $("#playPromptBtn"),
     resetQuizBtn: $("#resetQuizBtn"),
     practiceControls: $("#practiceControls"),
@@ -30,7 +28,6 @@
   const state = {
     mainMode: "practice",
     practiceMode: "name",
-    muted: false,
     quizOrder: [],
     quizIndex: 0,
     guessesThisLetter: 0,
@@ -67,7 +64,7 @@
   }
 
   function playAudio(audio) {
-    if (state.muted || !audio) return Promise.resolve();
+    if (!audio) return Promise.resolve();
     stopAudio();
     state.activeAudio = audio;
     audio.currentTime = 0;
@@ -159,29 +156,10 @@
     ui.progressText.textContent = `Quiz Progress: ${cleared}/26 cleared | First-try score: ${state.firstTryCorrect}`;
   }
 
-  function updatePromptText() {
-    if (state.mainMode === "practice") {
-      ui.promptText.textContent = state.practiceMode === "name"
-        ? "Tap any tile to hear its letter name."
-        : "Tap any tile to hear its letter sound.";
-      return;
-    }
-
-    const target = currentQuizLetter();
-    if (!target) {
-      ui.promptText.textContent = "Quiz complete.";
-      return;
-    }
-
-    const remaining = 3 - state.guessesThisLetter;
-    ui.promptText.textContent = `Find letter ${target}. ${remaining} guess${remaining === 1 ? "" : "es"} left.`;
-  }
-
   function updateControlVisibility() {
     const inPractice = state.mainMode === "practice";
     ui.practiceControls.classList.toggle("hidden", !inPractice);
     ui.quizControls.classList.toggle("hidden", inPractice);
-    ui.playPromptBtn.classList.toggle("hidden", inPractice);
     ui.resetQuizBtn.classList.toggle("hidden", inPractice);
   }
 
@@ -250,7 +228,6 @@
   function finishQuiz() {
     state.quizComplete = true;
     updateProgressText();
-    ui.promptText.textContent = "All letters completed.";
     showScoreModal();
   }
 
@@ -265,7 +242,6 @@
     state.resolvedLetters = new Set();
     resetTiles();
     updateProgressText();
-    updatePromptText();
     playCurrentPrompt();
   }
 
@@ -278,7 +254,6 @@
 
     if (mode === "practice") {
       updateProgressText();
-      updatePromptText();
       return;
     }
 
@@ -289,20 +264,13 @@
     state.practiceMode = mode;
     setSegmentState("[data-practice-mode]", "data-practice-mode", mode);
     updateProgressText();
-    updatePromptText();
   }
 
   function playCurrentPrompt() {
-    if (state.mainMode === "practice") {
-      ui.promptText.textContent = state.practiceMode === "name"
-        ? "Tap a tile to hear its letter name."
-        : "Tap a tile to hear its letter sound.";
-      return Promise.resolve();
-    }
+    if (state.mainMode === "practice") return Promise.resolve();
 
     const target = currentQuizLetter();
     if (!target || state.quizComplete) return Promise.resolve();
-    updatePromptText();
     return playAudio(state.audio.find.get(target));
   }
 
@@ -322,7 +290,6 @@
       }
 
       updateProgressText();
-      updatePromptText();
       playCurrentPrompt();
     }, 550);
   }
@@ -355,7 +322,6 @@
 
     state.guessesThisLetter += 1;
     pulseTile(tile);
-    updatePromptText();
 
     if (state.guessesThisLetter >= 3) {
       resolveQuizLetter(target, COLORS.failed, false);
@@ -389,12 +355,6 @@
     ui.resetQuizBtn.addEventListener("click", beginQuizRound);
     ui.playAgainBtn.addEventListener("click", beginQuizRound);
     ui.closeModalBtn.addEventListener("click", closeScoreModal);
-    ui.muteBtn.addEventListener("click", () => {
-      state.muted = !state.muted;
-      if (state.muted) stopAudio();
-      ui.muteBtn.textContent = state.muted ? "Sound Off" : "Sound On";
-      ui.muteBtn.setAttribute("aria-pressed", String(state.muted));
-    });
   }
 
   async function init() {
@@ -402,7 +362,6 @@
     bindEvents();
     updateControlVisibility();
     updateProgressText();
-    updatePromptText();
     await preloadAudio();
   }
 

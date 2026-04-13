@@ -1,11 +1,16 @@
 {
-  "name": "Alphabet Flashcards",
-  "short_name": "ABC Cards",
+  "name": "Alphabet Game",
+  "short_name": "ABC Fun",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#f5f6f3",
-  "theme_color": "#e9f4f2",
+  "background_color": "#87d8ff",
+  "theme_color": "#63bff5",
   "icons": [
+    {
+      "src": "icons/ABC favicon .jpg",
+      "sizes": "768x768",
+      "type": "image/jpeg"
+    },
     {
       "src": "icons/icon-192.png",
       "sizes": "192x192",
