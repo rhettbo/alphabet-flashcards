@@ -16,6 +16,12 @@
     resetQuizBtn: $("#resetQuizBtn"),
     practiceControls: $("#practiceControls"),
     quizControls: $("#quizControls"),
+    quizSetup: $("#quizSetup"),
+    selectedLetters: $("#selectedLetters"),
+    availableLetters: $("#availableLetters"),
+    selectedCount: $("#selectedCount"),
+    selectedZone: $("#selectedZone"),
+    availableZone: $("#availableZone"),
     loadingOverlay: $("#loadingOverlay"),
     loadFill: $("#loadFill"),
     scoreModal: $("#scoreModal"),
@@ -28,6 +34,7 @@
   const state = {
     mainMode: "practice",
     practiceMode: "name",
+    selectedQuizLetters: LETTERS.slice(),
     quizOrder: [],
     quizIndex: 0,
     guessesThisLetter: 0,
@@ -145,6 +152,14 @@
     return state.quizOrder[state.quizIndex] || null;
   }
 
+  function sortedSelectedLetters() {
+    return LETTERS.filter((letter) => state.selectedQuizLetters.includes(letter));
+  }
+
+  function sortedAvailableLetters() {
+    return LETTERS.filter((letter) => !state.selectedQuizLetters.includes(letter));
+  }
+
   function updateProgressText() {
     if (state.mainMode === "practice") {
       const modeLabel = state.practiceMode === "name" ? "Letter Name" : "Letter Sound";
@@ -153,13 +168,14 @@
     }
 
     const cleared = state.resolvedLetters.size;
-    ui.progressText.textContent = `Quiz Progress: ${cleared}/26 cleared | First-try score: ${state.firstTryCorrect}`;
+    ui.progressText.textContent = `Quiz Progress: ${cleared}/${state.quizOrder.length || state.selectedQuizLetters.length} cleared | First-try score: ${state.firstTryCorrect}`;
   }
 
   function updateControlVisibility() {
     const inPractice = state.mainMode === "practice";
     ui.practiceControls.classList.toggle("hidden", !inPractice);
     ui.quizControls.classList.toggle("hidden", inPractice);
+    ui.quizSetup.classList.toggle("hidden", inPractice);
     ui.resetQuizBtn.classList.toggle("hidden", inPractice);
   }
 
@@ -212,6 +228,45 @@
     });
   }
 
+  function createPickerChip(letter) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "mini-letter-chip";
+    button.textContent = `${letter}${letter.toLowerCase()}`;
+    button.setAttribute("data-letter", letter);
+    button.setAttribute("draggable", "true");
+    return button;
+  }
+
+  function renderQuizPicker() {
+    ui.selectedLetters.innerHTML = "";
+    ui.availableLetters.innerHTML = "";
+
+    sortedSelectedLetters().forEach((letter) => ui.selectedLetters.appendChild(createPickerChip(letter)));
+    sortedAvailableLetters().forEach((letter) => ui.availableLetters.appendChild(createPickerChip(letter)));
+    ui.selectedCount.textContent = String(state.selectedQuizLetters.length);
+  }
+
+  function moveQuizLetter(letter, targetZone) {
+    const isSelected = state.selectedQuizLetters.includes(letter);
+
+    if (targetZone === "selected" && !isSelected) {
+      state.selectedQuizLetters.push(letter);
+    }
+
+    if (targetZone === "available" && isSelected) {
+      if (state.selectedQuizLetters.length === 1) return;
+      state.selectedQuizLetters = state.selectedQuizLetters.filter((item) => item !== letter);
+    }
+
+    state.selectedQuizLetters = sortedSelectedLetters();
+    renderQuizPicker();
+
+    if (state.mainMode === "quiz") {
+      beginQuizRound();
+    }
+  }
+
   function showScoreModal() {
     const score = state.firstTryCorrect;
     const isPerfect = score === 26;
@@ -243,7 +298,7 @@
   function beginQuizRound() {
     closeScoreModal();
     stopAudio();
-    state.quizOrder = shuffle(LETTERS);
+    state.quizOrder = shuffle(state.selectedQuizLetters);
     state.quizIndex = 0;
     state.guessesThisLetter = 0;
     state.firstTryCorrect = 0;
@@ -251,7 +306,9 @@
     state.resolvedLetters = new Set();
     resetTiles();
     updateProgressText();
-    playCurrentPrompt();
+    if (state.quizOrder.length > 0) {
+      playCurrentPrompt();
+    }
   }
 
   function switchMainMode(mode) {
@@ -260,6 +317,8 @@
     updateControlVisibility();
     closeScoreModal();
     stopAudio();
+    clearMissedTiles();
+    resetTiles();
 
     if (mode === "practice") {
       updateProgressText();
@@ -365,10 +424,46 @@
     ui.resetQuizBtn.addEventListener("click", beginQuizRound);
     ui.playAgainBtn.addEventListener("click", beginQuizRound);
     ui.closeModalBtn.addEventListener("click", closeScoreModal);
+
+    [ui.selectedZone, ui.availableZone].forEach((zone) => {
+      zone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        zone.classList.add("is-over");
+      });
+
+      zone.addEventListener("dragleave", () => {
+        zone.classList.remove("is-over");
+      });
+
+      zone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        zone.classList.remove("is-over");
+        const letter = event.dataTransfer.getData("text/plain");
+        const targetZone = zone.getAttribute("data-zone");
+        if (letter && targetZone) moveQuizLetter(letter, targetZone);
+      });
+    });
+
+    [ui.selectedLetters, ui.availableLetters].forEach((wrap) => {
+      wrap.addEventListener("dragstart", (event) => {
+        const chip = event.target.closest(".mini-letter-chip");
+        if (!chip) return;
+        event.dataTransfer.setData("text/plain", chip.getAttribute("data-letter"));
+      });
+
+      wrap.addEventListener("click", (event) => {
+        const chip = event.target.closest(".mini-letter-chip");
+        if (!chip) return;
+        const letter = chip.getAttribute("data-letter");
+        const targetZone = wrap === ui.selectedLetters ? "available" : "selected";
+        moveQuizLetter(letter, targetZone);
+      });
+    });
   }
 
   async function init() {
     renderTiles();
+    renderQuizPicker();
     bindEvents();
     updateControlVisibility();
     updateProgressText();

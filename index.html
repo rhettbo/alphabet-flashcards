@@ -56,6 +56,25 @@
               <button id="resetQuizBtn" class="action-button action-button--secondary hidden" type="button">Restart Quiz</button>
             </div>
           </div>
+
+          <div class="control-block control-block--wide hidden" id="quizSetup">
+            <span class="control-block__label">Choose Quiz Letters</span>
+            <div class="quiz-picker">
+              <div class="drop-zone" id="selectedZone" data-zone="selected">
+                <div class="drop-zone__header">
+                  <span>Quiz Letters</span>
+                  <span id="selectedCount" class="drop-zone__count">26</span>
+                </div>
+                <div id="selectedLetters" class="mini-letter-grid" aria-label="Selected quiz letters"></div>
+              </div>
+              <div class="drop-zone" id="availableZone" data-zone="available">
+                <div class="drop-zone__header">
+                  <span>Other Letters</span>
+                </div>
+                <div id="availableLetters" class="mini-letter-grid" aria-label="Available letters"></div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section class="panel panel--board">
