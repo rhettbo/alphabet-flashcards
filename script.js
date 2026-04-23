@@ -48,7 +48,8 @@
     resolvedLetters: new Set(),
     quizComplete: false,
     awaitingAdvance: false,
-    activeAudio: null,
+    audioUnlocked: false,
+    player: null,
     audio: {
       sound: new Map(),
       name: new Map(),
@@ -71,111 +72,79 @@
   }
 
   function stopAudio() {
-    if (state.activeAudio) {
-      state.activeAudio.pause();
-      state.activeAudio.currentTime = 0;
-      state.activeAudio = null;
+    if (state.player) {
+      state.player.pause();
+      state.player.currentTime = 0;
     }
   }
 
-  function playAudio(audio) {
-    if (!audio) return Promise.resolve();
+  function normalizeAudioSrc(src) {
+    return new URL(src, window.location.href).href;
+  }
+
+  function playAudio(src) {
+    if (!src || !state.player) return Promise.resolve();
+    const player = state.player;
     stopAudio();
-    if (audio.readyState === 0) {
-      audio.load();
+
+    if (normalizeAudioSrc(player.getAttribute("src") || player.src || "") !== normalizeAudioSrc(src)) {
+      player.src = src;
     }
-    audio.currentTime = 0;
-    state.activeAudio = audio;
+
+    player.load();
+    player.currentTime = 0;
 
     return new Promise((resolve) => {
       const done = () => {
-        audio.onended = null;
-        audio.onerror = null;
-        if (state.activeAudio === audio) state.activeAudio = null;
+        player.onended = null;
+        player.onerror = null;
         resolve();
       };
 
-      audio.onended = done;
-      audio.onerror = done;
-      audio.play().catch(done);
+      player.onended = done;
+      player.onerror = done;
+      player.play().catch(done);
     });
   }
 
   function preloadAudio() {
-    const assets = [];
-
     LETTERS.forEach((letter) => {
       ["sound", "name", "find"].forEach((kind) => {
-        const audio = new Audio(getAudioPath(kind, letter));
-        audio.preload = "auto";
-        state.audio[kind].set(letter, audio);
-        assets.push(audio);
+        state.audio[kind].set(letter, getAudioPath(kind, letter));
       });
     });
 
-    const greatJob = new Audio("audio/great_job.wav");
-    greatJob.preload = "auto";
-    state.audio.greatJob = greatJob;
-    assets.push(greatJob);
-
-    const correct = new Audio("audio/correct.wav");
-    correct.preload = "auto";
-    state.audio.correct = correct;
-    assets.push(correct);
-
-    let completed = 0;
-    if (!assets.length) return Promise.resolve();
-
     ui.loadingOverlay.classList.remove("hidden");
     ui.loadingOverlay.setAttribute("aria-hidden", "false");
+    ui.loadFill.style.width = "100%";
 
     return new Promise((resolve) => {
-      let overlayClosed = false;
+      state.audio.correct = "audio/correct.wav";
+      state.audio.greatJob = "audio/great_job.wav";
+      window.setTimeout(() => {
+        ui.loadingOverlay.classList.add("hidden");
+        ui.loadingOverlay.setAttribute("aria-hidden", "true");
+        resolve();
+      }, 120);
+    });
+  }
 
-      const closeOverlay = () => {
-        if (overlayClosed) return;
-        overlayClosed = true;
-        window.setTimeout(() => {
-          ui.loadingOverlay.classList.add("hidden");
-          ui.loadingOverlay.setAttribute("aria-hidden", "true");
-          resolve();
-        }, 120);
-      };
+  function unlockAudio() {
+    if (state.audioUnlocked || !state.player) return;
+    const player = state.player;
+    const unlockSrc = state.audio.correct || getAudioPath("sound", "A");
+    player.src = unlockSrc;
+    player.muted = true;
+    player.playsInline = true;
+    player.setAttribute("playsinline", "");
 
-      const markDone = () => {
-        completed += 1;
-        ui.loadFill.style.width = `${Math.round((completed / assets.length) * 100)}%`;
-        if (completed === assets.length) {
-          closeOverlay();
-        }
-      };
-
-      assets.forEach((audio) => {
-        if (audio.readyState >= 1) {
-          markDone();
-          return;
-        }
-
-        let settled = false;
-        const handle = () => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timeoutId);
-          markDone();
-        };
-
-        const timeoutId = window.setTimeout(handle, 2500);
-        audio.addEventListener("loadedmetadata", handle, { once: true });
-        audio.addEventListener("loadeddata", handle, { once: true });
-        audio.addEventListener("canplay", handle, { once: true });
-        audio.addEventListener("canplaythrough", handle, { once: true });
-        audio.addEventListener("suspend", handle, { once: true });
-        audio.addEventListener("stalled", handle, { once: true });
-        audio.addEventListener("error", handle, { once: true });
-        audio.load();
-      });
-
-      window.setTimeout(closeOverlay, 3500);
+    player.play().then(() => {
+      player.pause();
+      player.currentTime = 0;
+      player.muted = false;
+      state.audioUnlocked = true;
+    }).catch(() => {
+      player.muted = false;
     });
   }
 
@@ -494,6 +463,7 @@
     document.addEventListener("pointerdown", (event) => {
       const button = event.target.closest("button");
       if (!button || button.disabled) return;
+      unlockAudio();
       button.classList.add("is-pressed");
     });
 
@@ -577,6 +547,10 @@
   }
 
   async function init() {
+    state.player = new Audio();
+    state.player.preload = "auto";
+    state.player.playsInline = true;
+    state.player.setAttribute("playsinline", "");
     renderTiles();
     renderQuizPicker();
     bindEvents();
