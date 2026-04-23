@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v2.1.0";
+const CACHE_VERSION = "v2.2.0";
 const CACHE_NAME = `alphabet-game-${CACHE_VERSION}`;
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -21,7 +21,7 @@ const AUDIO_ASSETS = LETTERS.flatMap((letter) => {
     `./audio/letter ${lower}.wav`,
     `./audio/find ${lower}.wav`,
   ];
-}).concat("./audio/great_job.wav");
+}).concat("./audio/great_job.wav", "./audio/correct.wav");
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {

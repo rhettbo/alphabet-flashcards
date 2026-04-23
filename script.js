@@ -47,11 +47,13 @@
     firstTryCorrect: 0,
     resolvedLetters: new Set(),
     quizComplete: false,
+    awaitingAdvance: false,
     activeAudio: null,
     audio: {
       sound: new Map(),
       name: new Map(),
       find: new Map(),
+      correct: null,
       greatJob: null,
     },
   };
@@ -79,20 +81,23 @@
   function playAudio(audio) {
     if (!audio) return Promise.resolve();
     stopAudio();
-    const player = audio.cloneNode(true);
-    player.preload = "auto";
-    state.activeAudio = player;
-    player.currentTime = 0;
+    if (audio.readyState === 0) {
+      audio.load();
+    }
+    audio.currentTime = 0;
+    state.activeAudio = audio;
 
     return new Promise((resolve) => {
       const done = () => {
-        if (state.activeAudio === player) state.activeAudio = null;
+        audio.onended = null;
+        audio.onerror = null;
+        if (state.activeAudio === audio) state.activeAudio = null;
         resolve();
       };
 
-      player.onended = done;
-      player.onerror = done;
-      player.play().catch(done);
+      audio.onended = done;
+      audio.onerror = done;
+      audio.play().catch(done);
     });
   }
 
@@ -112,6 +117,11 @@
     greatJob.preload = "auto";
     state.audio.greatJob = greatJob;
     assets.push(greatJob);
+
+    const correct = new Audio("audio/correct.wav");
+    correct.preload = "auto";
+    state.audio.correct = correct;
+    assets.push(correct);
 
     let completed = 0;
     if (!assets.length) return Promise.resolve();
@@ -134,7 +144,7 @@
 
       assets.forEach((audio) => {
         const handle = () => markDone();
-        audio.addEventListener("canplaythrough", handle, { once: true });
+        audio.addEventListener("loadeddata", handle, { once: true });
         audio.addEventListener("error", handle, { once: true });
         audio.load();
       });
@@ -186,6 +196,7 @@
 
   function updateControlVisibility() {
     const inPractice = state.mainMode === "practice";
+    document.body.classList.toggle("is-quiz-mode", !inPractice);
     ui.practiceControls.classList.toggle("hidden", !inPractice);
     ui.quizControls.classList.toggle("hidden", inPractice);
     ui.quizSetup.classList.toggle("hidden", inPractice);
@@ -311,12 +322,13 @@
 
   function showScoreModal() {
     const score = state.firstTryCorrect;
-    const isPerfect = score === 26;
+    const total = state.quizOrder.length || state.selectedQuizLetters.length;
+    const isPerfect = total > 0 && score === total;
 
-    ui.scoreTitle.textContent = isPerfect ? "Great job, 26/26" : "Quiz complete";
+    ui.scoreTitle.textContent = isPerfect ? `Great job, ${score}/${total}` : "Quiz complete";
     ui.scoreLine.textContent = isPerfect
-      ? "Every letter was correct on the first guess."
-      : `You got ${score} out of 26 letters on the first try.`;
+      ? `You got ${score}/${total} correct on the first try.`
+      : `You got ${score} out of ${total} letters on the first try.`;
 
     ui.scoreModal.classList.remove("hidden");
     ui.scoreModal.setAttribute("aria-hidden", "false");
@@ -345,6 +357,7 @@
     state.guessesThisLetter = 0;
     state.firstTryCorrect = 0;
     state.quizComplete = false;
+    state.awaitingAdvance = false;
     state.resolvedLetters = new Set();
     resetTiles();
     updateProgressText();
@@ -391,11 +404,12 @@
     playAudio(audioMap.get(letter));
   }
 
-  function advanceQuizAfterDelay() {
+  function advanceQuizAfterDelay(delay = 550) {
     window.setTimeout(() => {
       clearMissedTiles();
       state.quizIndex += 1;
       state.guessesThisLetter = 0;
+      state.awaitingAdvance = false;
 
       if (state.quizIndex >= state.quizOrder.length) {
         finishQuiz();
@@ -404,19 +418,26 @@
 
       updateProgressText();
       playCurrentPrompt();
-    }, 550);
+    }, delay);
   }
 
-  function resolveQuizLetter(letter, color, firstTryScored) {
+  function resolveQuizLetter(letter, color, firstTryScored, playCorrectCue) {
+    state.awaitingAdvance = true;
     state.resolvedLetters.add(letter);
     if (firstTryScored) state.firstTryCorrect += 1;
     setTileLocked(letter, color);
     updateProgressText();
+
+    if (playCorrectCue) {
+      playAudio(state.audio.correct).finally(() => advanceQuizAfterDelay(180));
+      return;
+    }
+
     advanceQuizAfterDelay();
   }
 
   function handleQuizTile(letter, tile) {
-    if (state.quizComplete || state.resolvedLetters.has(letter)) return;
+    if (state.quizComplete || state.awaitingAdvance || state.resolvedLetters.has(letter)) return;
 
     const target = currentQuizLetter();
     if (!target) return;
@@ -429,7 +450,7 @@
           ? COLORS.secondTry
           : COLORS.thirdTry;
 
-      resolveQuizLetter(letter, color, attemptNumber === 1);
+      resolveQuizLetter(letter, color, attemptNumber === 1, true);
       return;
     }
 
@@ -437,8 +458,24 @@
     pulseTile(tile);
 
     if (state.guessesThisLetter >= 3) {
-      resolveQuizLetter(target, COLORS.failed, false);
+      resolveQuizLetter(target, COLORS.failed, false, false);
     }
+  }
+
+  function bindPressedFeedback() {
+    document.addEventListener("pointerdown", (event) => {
+      const button = event.target.closest("button");
+      if (!button || button.disabled) return;
+      button.classList.add("is-pressed");
+    });
+
+    ["pointerup", "pointercancel"].forEach((eventName) => {
+      document.addEventListener(eventName, () => {
+        document.querySelectorAll("button.is-pressed").forEach((button) => {
+          button.classList.remove("is-pressed");
+        });
+      });
+    });
   }
 
   function onTileClick(event) {
@@ -455,6 +492,8 @@
   }
 
   function bindEvents() {
+    bindPressedFeedback();
+
     document.querySelectorAll("[data-main-mode]").forEach((button) => {
       button.addEventListener("click", () => switchMainMode(button.getAttribute("data-main-mode")));
     });
