@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v2.2.0";
+const CACHE_VERSION = "v2.3.0";
 const CACHE_NAME = `alphabet-game-${CACHE_VERSION}`;
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 

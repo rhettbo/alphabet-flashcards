@@ -54,15 +54,15 @@ button {
   width: min(1320px, calc(100% - 20px));
   min-height: 100dvh;
   margin: 0 auto;
-  padding: 16px 0 24px;
+  padding: 10px 0 12px;
 }
 
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(260px, 1.1fr);
-  gap: 14px;
+  gap: 10px;
   align-items: start;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 .hero__copy,
@@ -77,12 +77,12 @@ button {
   background: transparent;
   border: 0;
   border-radius: 24px;
-  padding: 18px 22px;
+  padding: 8px 14px;
   box-shadow: none;
 }
 
 .eyebrow {
-  margin: 0 0 10px;
+  margin: 0 0 4px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--accent-soft);
@@ -98,7 +98,7 @@ button {
 }
 
 .hero h1 {
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: clamp(1.7rem, 3.2vw, 2.6rem);
   max-width: none;
   color: #ff5a3d;
   text-shadow: 0 3px 0 rgba(255, 213, 74, 0.9);
@@ -106,7 +106,7 @@ button {
 
 .hero__status {
   display: grid;
-  gap: 14px;
+  gap: 8px;
 }
 
 .status-card,
@@ -120,9 +120,9 @@ button {
 
 .status-card {
   border-radius: 24px;
-  padding: 10px 6px;
+  padding: 6px 8px;
   display: grid;
-  gap: 6px;
+  gap: 2px;
 }
 
 .status-card__label,
@@ -135,8 +135,8 @@ button {
 }
 
 .status-card__value {
-  font-size: 1.05rem;
-  line-height: 1.45;
+  font-size: 0.96rem;
+  line-height: 1.2;
 }
 
 .segment,
@@ -178,25 +178,25 @@ button {
 .layout {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 8px;
   align-items: start;
 }
 
 .panel {
   border-radius: 24px;
-  padding: 8px 0;
+  padding: 4px 0;
 }
 
 .panel--controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
   align-items: end;
 }
 
 .control-block {
   display: grid;
-  gap: 10px;
+  gap: 6px;
   min-width: 220px;
   flex: 1 1 260px;
 }
@@ -208,19 +208,19 @@ button {
 .segmented {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 }
 
 .segment {
   flex: 1 1 220px;
   border-radius: 999px;
-  min-height: 76px;
-  padding: 18px 28px;
+  min-height: 62px;
+  padding: 14px 22px;
   background: rgba(255, 248, 223, 0.88);
   color: #934ef0;
   box-shadow: inset 0 0 0 2px rgba(143, 77, 232, 0.14), var(--button-shadow);
   font-weight: 700;
-  font-size: 1.14rem;
+  font-size: 1.04rem;
 }
 
 .segment.is-active {
@@ -250,7 +250,7 @@ button {
 .modal__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 }
 
 .prompt-card__actions > *,
@@ -261,12 +261,12 @@ button {
 .quiz-picker {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 8px;
 }
 
 .drop-zone {
-  min-height: 132px;
-  padding: 12px;
+  min-height: 110px;
+  padding: 10px;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.28);
   box-shadow: inset 0 0 0 2px rgba(143, 77, 232, 0.14);
@@ -280,8 +280,8 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  font-size: 0.92rem;
+  margin-bottom: 6px;
+  font-size: 0.86rem;
   font-weight: 700;
   color: var(--accent-soft);
 }
@@ -295,8 +295,8 @@ button {
 .drop-zone__shortcuts {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
 .drop-zone__count {
@@ -311,8 +311,8 @@ button {
 }
 
 .mini-action-button {
-  min-height: 36px;
-  padding: 8px 14px;
+  min-height: 32px;
+  padding: 6px 12px;
   border: 0;
   border-radius: 999px;
   background: rgba(255, 248, 223, 0.92);
@@ -331,29 +331,29 @@ button {
 
 .mini-letter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
 }
 
 .mini-letter-chip {
   width: 100%;
-  min-height: 56px;
-  padding: 10px 12px;
+  min-height: 42px;
+  padding: 6px 8px;
   border: 0;
-  border-radius: 18px;
+  border-radius: 14px;
   background: #fff;
   color: #ff6c35;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   box-shadow: var(--tile-shadow);
   cursor: grab;
 }
 
 .action-button {
-  min-height: 76px;
-  padding: 18px 28px;
+  min-height: 62px;
+  padding: 14px 22px;
   font-weight: 700;
-  font-size: 1.14rem;
+  font-size: 1.04rem;
 }
 
 .action-button--primary {
@@ -375,18 +375,18 @@ button {
   display: grid;
   width: 100%;
   margin: 0 auto;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(13, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .letter-tile {
   aspect-ratio: 1 / 1;
   min-width: 0;
-  border-radius: 26px;
-  border: 3px solid rgba(125, 79, 237, 0.16);
+  border-radius: 20px;
+  border: 2px solid rgba(125, 79, 237, 0.16);
   background: #fff;
   color: #ff6c35;
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: clamp(1.3rem, 2.2vw, 2.1rem);
   font-weight: 700;
   box-shadow: var(--tile-shadow);
   cursor: pointer;
@@ -430,12 +430,12 @@ button {
 }
 
 body.is-quiz-mode .quiz-picker {
-  gap: 10px;
+  gap: 8px;
 }
 
 body.is-quiz-mode .drop-zone {
-  min-height: 110px;
-  padding: 10px;
+  min-height: 96px;
+  padding: 8px;
 }
 
 body.is-quiz-mode .drop-zone__shortcuts {
@@ -444,15 +444,15 @@ body.is-quiz-mode .drop-zone__shortcuts {
 }
 
 body.is-quiz-mode .mini-letter-grid {
-  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+  gap: 4px;
 }
 
 body.is-quiz-mode .mini-letter-chip {
-  min-height: 44px;
-  padding: 6px 8px;
-  border-radius: 14px;
-  font-size: 0.92rem;
+  min-height: 36px;
+  padding: 4px 6px;
+  border-radius: 12px;
+  font-size: 0.8rem;
 }
 
 @keyframes shake {
@@ -510,7 +510,7 @@ body.is-quiz-mode .mini-letter-chip {
   }
 
   .letter-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(13, minmax(0, 1fr));
   }
 }
 
@@ -531,7 +531,7 @@ body.is-quiz-mode .mini-letter-chip {
 
   .letter-grid {
     width: 100%;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 10px;
   }
 
@@ -541,20 +541,43 @@ body.is-quiz-mode .mini-letter-chip {
 
   .letter-tile {
     border-radius: 18px;
-    font-size: clamp(1.65rem, 7vw, 2.5rem);
+    font-size: clamp(1.35rem, 7vw, 2rem);
   }
 
   .segment,
   .action-button {
-    min-height: 68px;
-    padding: 16px 22px;
-    font-size: 1.04rem;
+    min-height: 58px;
+    padding: 12px 16px;
+    font-size: 0.98rem;
   }
 }
 
 @media (max-width: 480px) {
   .letter-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) and (orientation: landscape) {
+  html,
+  body {
+    overflow-y: hidden;
+  }
+
+  .page-shell {
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    padding-bottom: 8px;
+  }
+
+  .panel--board {
+    display: flex;
+    align-items: center;
+  }
+
+  .letter-grid {
+    align-self: center;
   }
 }
 

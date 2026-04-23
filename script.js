@@ -130,24 +130,52 @@
     ui.loadingOverlay.setAttribute("aria-hidden", "false");
 
     return new Promise((resolve) => {
+      let overlayClosed = false;
+
+      const closeOverlay = () => {
+        if (overlayClosed) return;
+        overlayClosed = true;
+        window.setTimeout(() => {
+          ui.loadingOverlay.classList.add("hidden");
+          ui.loadingOverlay.setAttribute("aria-hidden", "true");
+          resolve();
+        }, 120);
+      };
+
       const markDone = () => {
         completed += 1;
         ui.loadFill.style.width = `${Math.round((completed / assets.length) * 100)}%`;
         if (completed === assets.length) {
-          window.setTimeout(() => {
-            ui.loadingOverlay.classList.add("hidden");
-            ui.loadingOverlay.setAttribute("aria-hidden", "true");
-            resolve();
-          }, 180);
+          closeOverlay();
         }
       };
 
       assets.forEach((audio) => {
-        const handle = () => markDone();
+        if (audio.readyState >= 1) {
+          markDone();
+          return;
+        }
+
+        let settled = false;
+        const handle = () => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          markDone();
+        };
+
+        const timeoutId = window.setTimeout(handle, 2500);
+        audio.addEventListener("loadedmetadata", handle, { once: true });
         audio.addEventListener("loadeddata", handle, { once: true });
+        audio.addEventListener("canplay", handle, { once: true });
+        audio.addEventListener("canplaythrough", handle, { once: true });
+        audio.addEventListener("suspend", handle, { once: true });
+        audio.addEventListener("stalled", handle, { once: true });
         audio.addEventListener("error", handle, { once: true });
         audio.load();
       });
+
+      window.setTimeout(closeOverlay, 3500);
     });
   }
 
